@@ -1,15 +1,21 @@
-let page = document.getElementById('buttonDiv');
-const kButtonColors = ['#3aa757', '#e8453c', '#f9bb2d', '#4688f1'];
-
 (() => {
-  for (let item of kButtonColors) {
-    let button = document.createElement('button');
-    button.style.backgroundColor = item;
-    button.addEventListener('click', () => {
-      chrome.storage.sync.set({color: item}, () => {
-        console.log('color is ' + item);
-      })
+  let extensionsElem = document.getElementById('extensions');
+  chrome.storage.sync.get('extensions', (data) => {
+    extensionsElem.value = data.extensions.join(', ');
+  });
+
+  document.getElementById('form').onsubmit = () => {
+    let extensions = Array.from(
+      extensionsElem
+        .value
+        .replace(/\s/g, '')
+        .split(',')
+        .filter(e => e)
+    );
+
+    chrome.storage.sync.set({extensions: extensions}, () => {
+      console.log('Saved hidden extensions');
+      console.log(extensions);
     });
-    page.appendChild(button);
-  }
+  };
 })();

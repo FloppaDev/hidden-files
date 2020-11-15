@@ -4,54 +4,55 @@
   const files = document.querySelector('[aria-labelledby="files"]');
   if(!files) return;
 
-  const extensions = ['lock'];
-  let filtered = 0;
-  const filterExt = (element, name) => {
-    for(let extension of extensions) {
-        if(name.endsWith(`.${extension}`)) element.remove();
-        filtered++;
-    }
-  };
+  chrome.storage.sync.get('extensions', (data) => {
+    const extensions = data.extensions;
 
-  let children = files.children;
-
-  for(let i=1; i<children.length; i++) {
-    let name = children[i].querySelector('[title]').innerText;
-    filterExt(children[i], name);
-  }
-  let goal = filtered;
-  filtered = 0;
-
-  const processOctotree = () => {
-    const check = () => {
-      const octotree = document.querySelector('.octotree-view-body');
-      if(!octotree) return;
-      children = octotree.querySelectorAll('[title]');
-      if(!children) return;
-
-      for(let i=1; i<children.length; i++) {
-        let name = children[i].getAttribute('title');
-        filterExt(children[i], name);
+    let filtered = 0;
+    const filterExt = (element, name) => {
+      for(let extension of extensions) {
+          if(name.endsWith(extension)) element.remove();
+          filtered++;
       }
-
-      return filtered == goal;
     };
 
-    const sleep = (ms) => new Promise(
-      resolve => setTimeout(resolve, ms)
-    );
+    let children = Array.from(files.children);
+    let len = children.length;
 
-    const loop = async () => {
-      if(check()) return;
-      await sleep(100);
+    for(let i=1; i<len; i++) {
+      let name = children[i].querySelector('[title]').innerText;
+      filterExt(children[i], name);
+    }
+
+    let goal = filtered;
+    filtered = 0;
+
+    const processOctotree = () => {
+      const check = () => {
+        const octotree = document.querySelector('.octotree-view-body');
+        if(!octotree) return;
+        children = octotree.querySelectorAll('[title]');
+        if(!children) return;
+
+        for(let i=1; i<children.length; i++) {
+          let name = children[i].getAttribute('title');
+          filterExt(children[i], name);
+        }
+
+        return filtered == goal;
+      };
+
+      const loop = async () => {
+        if(check()) return;
+        await new Promise(resolve => setTimeout(resolve, 100));
+        loop();
+      };
+
       loop();
     };
 
-    loop();
-  };
-
-  chrome.storage.sync.get('octotree', (data) => {
-    if(data.octotree) processOctotree();
+    chrome.storage.sync.get('octotree', (data) => {
+      if(data.octotree) processOctotree();
+    });
   });
 
 })();
