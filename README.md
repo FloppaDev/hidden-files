@@ -6,6 +6,7 @@ https://chrome.google.com/webstore/detail/octotree-github-code-tree/bkhaagjahfmj
 
 I don't want to pay the registration fees for the store, so here is how you can install it 👀 :
 ![render](/screenshot.png)
+- go to chrome://extensions
 - Enable Developer mode
 - Clone the repo and load it
 - Disable Developer mode
