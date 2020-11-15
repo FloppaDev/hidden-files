@@ -5,9 +5,12 @@
   if(!files) return;
 
   const extensions = ['lock'];
+  let filtered = 0;
   const filterExt = (element, name) => {
-    for(let extension of extensions)
-      if(name.endsWith(`.${extension}`)) element.remove();
+    for(let extension of extensions) {
+        if(name.endsWith(`.${extension}`)) element.remove();
+        filtered++;
+    }
   };
 
   let children = files.children;
@@ -16,15 +19,39 @@
     let name = children[i].querySelector('[title]').innerText;
     filterExt(children[i], name);
   }
+  let goal = filtered;
+  filtered = 0;
 
-  const octoTree = document.querySelector('.octotree-view-body');
-  if(!octoTree) return;
+  const processOctotree = () => {
+    const check = () => {
+      const octotree = document.querySelector('.octotree-view-body');
+      if(!octotree) return;
+      children = octotree.querySelectorAll('[title]');
+      if(!children) return;
 
-  children = octoTree.querySelectorAll('[title]');
+      for(let i=1; i<children.length; i++) {
+        let name = children[i].getAttribute('title');
+        filterExt(children[i], name);
+      }
 
-  for(let i=1; i<children.length; i++) {
-    let name = children[i].getAttribute('title');
-    filterExt(children[i], name);
-  }
+      return filtered == goal;
+    };
+
+    const sleep = (ms) => new Promise(
+      resolve => setTimeout(resolve, ms)
+    );
+
+    const loop = async () => {
+      if(check()) return;
+      await sleep(100);
+      loop();
+    };
+
+    loop();
+  };
+
+  chrome.storage.sync.get('octotree', (data) => {
+    if(data.octotree) processOctotree();
+  });
 
 })();
